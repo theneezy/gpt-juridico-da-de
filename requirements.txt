@@ -6,3 +6,4 @@ chromadb
 tiktoken
 unstructured
 python-docx
+protobuf==3.20.*
