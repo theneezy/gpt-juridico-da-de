@@ -1,11 +1,10 @@
 
 import streamlit as st
-from langchain.vectorstores import Chroma
+from langchain.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import DirectoryLoader
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain.chains import RetrievalQA
-import tempfile
 import os
 
 st.set_page_config(page_title="GPT Jurídico da Dê", layout="wide")
@@ -17,13 +16,12 @@ api_key = st.text_input("🔑 Cole sua OpenAI API Key:", type="password")
 if api_key:
     os.environ["OPENAI_API_KEY"] = api_key
 
-    # Carregar base vetorial
     with st.spinner("🔍 Carregando jurisprudência da Dê..."):
         loader = DirectoryLoader("minutas_anonimizadas", glob="**/*.docx")
         docs = loader.load()
         splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
         documents = splitter.split_documents(docs)
-        db = Chroma.from_documents(documents, OpenAIEmbeddings())
+        db = FAISS.from_documents(documents, OpenAIEmbeddings())
         qa = RetrievalQA.from_chain_type(
             llm=ChatOpenAI(model_name="gpt-4", temperature=0),
             chain_type="stuff",
