@@ -23,10 +23,11 @@ if api_key:
             splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
             documents = splitter.split_documents(docs)
             db = FAISS.from_documents(documents, OpenAIEmbeddings())
+            retriever = db.as_retriever(search_kwargs={"k": 10})
             qa = RetrievalQA.from_chain_type(
-                llm=ChatOpenAI(model_name="gpt-4", temperature=0),
+                llm=ChatOpenAI(model_name="gpt-4-turbo", temperature=0),
                 chain_type="stuff",
-                retriever=db.as_retriever()
+                retriever=retriever
             )
             st.session_state.qa = qa
 
