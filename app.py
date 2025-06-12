@@ -16,17 +16,19 @@ api_key = st.text_input("🔑 Cole sua OpenAI API Key:", type="password")
 if api_key:
     os.environ["OPENAI_API_KEY"] = api_key
 
-    with st.spinner("🔍 Carregando jurisprudência da Dê..."):
-        loader = DirectoryLoader("minutas_anonimizadas", glob="**/*.docx")
-        docs = loader.load()
-        splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
-        documents = splitter.split_documents(docs)
-        db = FAISS.from_documents(documents, OpenAIEmbeddings())
-        qa = RetrievalQA.from_chain_type(
-            llm=ChatOpenAI(model_name="gpt-4", temperature=0),
-            chain_type="stuff",
-            retriever=db.as_retriever()
-        )
+    if "qa" not in st.session_state:
+        with st.spinner("🔍 Carregando jurisprudência da Dê..."):
+            loader = DirectoryLoader("minutas_anonimizadas", glob="**/*.docx")
+            docs = loader.load()
+            splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+            documents = splitter.split_documents(docs)
+            db = FAISS.from_documents(documents, OpenAIEmbeddings())
+            qa = RetrievalQA.from_chain_type(
+                llm=ChatOpenAI(model_name="gpt-4", temperature=0),
+                chain_type="stuff",
+                retriever=db.as_retriever()
+            )
+            st.session_state.qa = qa
 
     st.success("Jurisprudência carregada!")
 
@@ -64,6 +66,6 @@ Apelação: {apela}
 
 Use estrutura técnica, linguagem objetiva, e fundamente conforme jurisprudência indexada.
 """
-            resposta = qa.invoke({"query": prompt})
+            resposta = st.session_state.qa.invoke({"query": prompt})
             st.markdown("### ✨ Voto gerado:")
             st.text_area("Resultado", value=resposta["result"], height=400)
